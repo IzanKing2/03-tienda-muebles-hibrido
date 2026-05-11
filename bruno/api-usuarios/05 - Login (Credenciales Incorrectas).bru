@@ -1,0 +1,34 @@
+meta {
+  name: Login - Credenciales incorrectas
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "admin@tienda.com",
+    "password": "password_erronea"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8001
+}
+
+tests {
+  test("Devuelve 422 Unprocessable Content", function() {
+    expect(res.getStatus()).to.equal(422);
+  });
+  
+  test("El body contiene errors con campo email", function() {
+    const data = res.getBody();
+    expect(data).to.have.property("errors");
+    expect(data.errors).to.have.property("email");
+  });
+}

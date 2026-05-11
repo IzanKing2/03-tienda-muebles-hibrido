@@ -1,0 +1,52 @@
+meta {
+  name: Registrar usuario
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/registrar
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Usuario Test",
+    "email": "test@tienda.com",
+    "password": "password",
+    "password_confirmation": "password"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8001
+}
+
+tests {
+  test("Devuelve 201 Created", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("El body tiene message y user", function() {
+    const data = res.getBody();
+    expect(data).to.have.property("message");
+    expect(data).to.have.property("user");
+  });
+  
+  test("El usuario tiene los campos correctos", function() {
+    const user = res.getBody().user;
+    expect(user).to.have.property("id");
+    expect(user).to.have.property("name");
+    expect(user).to.have.property("email");
+    expect(user).to.have.property("rol");
+  });
+  
+  test("El rol por defecto es cliente", function() {
+    expect(res.getBody().user.rol).to.equal("cliente");
+  });
+  
+  test("El email coincide con el enviado", function() {
+    expect(res.getBody().user.email).to.equal("test@tienda.com");
+  });
+}

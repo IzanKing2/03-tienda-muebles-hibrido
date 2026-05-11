@@ -1,0 +1,21 @@
+meta {
+  name: Perfil (sin token - 401)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/perfil
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8001
+}
+
+tests {
+  test("Devuelve 401 Unauthorized sin token", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

@@ -1,0 +1,41 @@
+meta {
+  name: Perfil (autenticado)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/perfil
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8001
+}
+
+tests {
+  test("Devuelve 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("El body tiene el campo user", function() {
+    expect(res.getBody()).to.have.property("user");
+  });
+  
+  test("El usuario tiene los campos id, name, email, rol", function() {
+    const user = res.getBody().user;
+    expect(user).to.have.property("id");
+    expect(user).to.have.property("name");
+    expect(user).to.have.property("email");
+    expect(user).to.have.property("rol");
+  });
+  
+  test("No se expone la password", function() {
+    expect(res.getBody().user).to.not.have.property("password");
+  });
+}

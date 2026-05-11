@@ -1,0 +1,15 @@
+{
+  "version": "1",
+  "name": "Tienda Muebles - API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "size": 0.0071239471435546875,
+  "filesCount": 10,
+  "presets": {
+    "requestType": "http",
+    "requestUrl": "http://localhost:8001"
+  }
+}

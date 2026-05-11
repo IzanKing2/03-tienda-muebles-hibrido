@@ -1,0 +1,71 @@
+meta {
+  name: Login - Administrador
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "admin@tienda.com",
+    "password": "password"
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8001
+}
+
+script:post-response {
+  const data = res.getBody();
+  if (data.access_token) {
+    bru.setVar("token", data.access_token);
+  }
+}
+
+tests {
+  test("Devuelve 200 OK", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("El body tiene access_token, token_type, user y abilities", function() {
+    const data = res.getBody();
+    expect(data).to.have.property("access_token");
+    expect(data).to.have.property("token_type");
+    expect(data).to.have.property("user");
+    expect(data).to.have.property("abilities");
+  });
+  
+  test("El token_type es Bearer", function() {
+    expect(res.getBody().token_type).to.equal("Bearer");
+  });
+  
+  test("El usuario tiene rol administrador", function() {
+    expect(res.getBody().user.rol).to.equal("administrador");
+  });
+  
+  test("Las abilities incluyen perfil.ver", function() {
+    expect(res.getBody().abilities).to.include("perfil.ver");
+  });
+  
+  test("Las abilities incluyen admin.panel", function() {
+    expect(res.getBody().abilities).to.include("admin.panel");
+  });
+  
+  test("Las abilities incluyen usuarios.*", function() {
+    const abilities = res.getBody().abilities;
+    expect(abilities).to.include("usuarios.ver");
+    expect(abilities).to.include("usuarios.crear");
+    expect(abilities).to.include("usuarios.editar");
+    expect(abilities).to.include("usuarios.eliminar");
+  });
+  
+  test("El token queda guardado en la variable de entorno", function() {
+    expect(bru.getVar("token")).to.not.be.empty;
+  });
+}
