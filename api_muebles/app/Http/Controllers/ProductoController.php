@@ -7,21 +7,38 @@ use App\Http\Resources\ProductoResource;
 use App\Http\Resources\ProductoCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use OpenApi\Attributes as OA;
 
+#[OA\Info(version: '1.0.0', title: 'API Muebles', description: 'API REST para gestión del catálogo de muebles')]
+#[OA\SecurityScheme(securityScheme: 'sanctum', type: 'http', scheme: 'bearer', bearerFormat: 'JWT')]
 class ProductoController extends Controller
 {
+    #[OA\Get(
+        path: '/api/productos',
+        summary: 'Listar productos con filtros y paginación',
+        tags: ['Productos'],
+        parameters: [
+            new OA\Parameter(name: 'search',       in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'categoria_id', in: 'query', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'precio_min',   in: 'query', schema: new OA\Schema(type: 'number')),
+            new OA\Parameter(name: 'precio_max',   in: 'query', schema: new OA\Schema(type: 'number')),
+            new OA\Parameter(name: 'destacado',    in: 'query', schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'sort',         in: 'query', schema: new OA\Schema(type: 'string', enum: ['id','precio','nombre','created_at','destacado'])),
+            new OA\Parameter(name: 'order',        in: 'query', schema: new OA\Schema(type: 'string', enum: ['asc','desc'])),
+            new OA\Parameter(name: 'per_page',     in: 'query', schema: new OA\Schema(type: 'integer', default: 12)),
+        ],
+        responses: [new OA\Response(response: 200, description: 'Lista paginada de productos')]
+    )]
     public function index(Request $request)
     {
         $query = Producto::with('categorias', 'galeria.imagenes');
-        
-        // Filter by category
+
         if ($request->has('categoria_id')) {
             $query->whereHas('categorias', function($q) use ($request) {
                 $q->where('categorias.id', $request->categoria_id);
             });
         }
 
-        // Filter by price range
         if ($request->has('precio_min')) {
             $query->where('precio', '>=', $request->precio_min);
         }
@@ -29,22 +46,18 @@ class ProductoController extends Controller
             $query->where('precio', '<=', $request->precio_max);
         }
 
-        // Filter by exact color
         if ($request->has('color')) {
             $query->where('color_principal', $request->color);
         }
 
-        // Filter by materials (contains)
         if ($request->has('materiales')) {
             $query->where('materiales', 'like', '%' . $request->materiales . '%');
         }
 
-        // Filter by destacado
         if ($request->has('destacado')) {
             $query->where('destacado', (bool) $request->destacado);
         }
 
-        // Text Search
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -53,20 +66,28 @@ class ProductoController extends Controller
             });
         }
 
-        // Sorting
-        $sortField = $request->get('sort', 'id');
-        $sortOrder = $request->get('order', 'asc');
+        $sortField = $request->input('sort', 'id');
+        $sortOrder = $request->input('order', 'asc');
         $allowedSorts = ['id', 'precio', 'nombre', 'created_at', 'destacado'];
 
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortOrder === 'desc' ? 'desc' : 'asc');
         }
 
-        // Pagination
-        $perPage = $request->get('per_page', 12);
+        $perPage = $request->input('per_page', 12);
         return new ProductoCollection($query->paginate($perPage));
     }
 
+    #[OA\Get(
+        path: '/api/productos/{id}',
+        summary: 'Obtener un producto por ID',
+        tags: ['Productos'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Datos del producto'),
+            new OA\Response(response: 404, description: 'Producto no encontrado'),
+        ]
+    )]
     public function show($id)
     {
         $producto = Producto::with('categorias', 'galeria.imagenes')->find($id);
@@ -74,6 +95,30 @@ class ProductoController extends Controller
         return new ProductoResource($producto);
     }
 
+    #[OA\Post(
+        path: '/api/productos',
+        summary: 'Crear un nuevo producto',
+        tags: ['Productos'],
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['nombre','descripcion','precio','stock','materiales','dimensiones','color_principal'],
+            properties: [
+                new OA\Property(property: 'nombre',          type: 'string'),
+                new OA\Property(property: 'descripcion',     type: 'string'),
+                new OA\Property(property: 'precio',          type: 'number'),
+                new OA\Property(property: 'stock',           type: 'integer'),
+                new OA\Property(property: 'materiales',      type: 'string'),
+                new OA\Property(property: 'dimensiones',     type: 'string'),
+                new OA\Property(property: 'color_principal', type: 'string'),
+                new OA\Property(property: 'destacado',       type: 'boolean'),
+            ]
+        )),
+        responses: [
+            new OA\Response(response: 201, description: 'Producto creado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
+            new OA\Response(response: 422, description: 'Errores de validación'),
+        ]
+    )]
     public function store(Request $request)
     {
         if (!$request->user()->tokenCan('muebles.crear')) {
@@ -81,14 +126,14 @@ class ProductoController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:200',
-            'descripcion' => 'required|string',
-            'precio' => 'required|numeric',
-            'stock' => 'required|integer',
-            'materiales' => 'required|string',
-            'dimensiones' => 'required|string|max:100',
+            'nombre'          => 'required|string|max:200',
+            'descripcion'     => 'required|string',
+            'precio'          => 'required|numeric',
+            'stock'           => 'required|integer',
+            'materiales'      => 'required|string',
+            'dimensiones'     => 'required|string|max:100',
             'color_principal' => 'required|string|max:50',
-            'categorias' => 'array'
+            'categorias'      => 'array',
         ]);
 
         if ($validator->fails()) return response()->json(['errores' => $validator->errors()], 422);
@@ -102,6 +147,18 @@ class ProductoController extends Controller
         return (new ProductoResource($producto->load('categorias', 'galeria.imagenes')))->response()->setStatusCode(201);
     }
 
+    #[OA\Put(
+        path: '/api/productos/{id}',
+        summary: 'Actualizar un producto',
+        tags: ['Productos'],
+        security: [['sanctum' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Producto actualizado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
+            new OA\Response(response: 404, description: 'No encontrado'),
+        ]
+    )]
     public function update(Request $request, $id)
     {
         if (!$request->user()->tokenCan('muebles.editar')) {
@@ -120,6 +177,18 @@ class ProductoController extends Controller
         return new ProductoResource($producto->load('categorias', 'galeria.imagenes'));
     }
 
+    #[OA\Delete(
+        path: '/api/productos/{id}',
+        summary: 'Eliminar un producto',
+        tags: ['Productos'],
+        security: [['sanctum' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Producto eliminado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
+            new OA\Response(response: 404, description: 'No encontrado'),
+        ]
+    )]
     public function destroy(Request $request, $id)
     {
         if (!$request->user()->tokenCan('muebles.eliminar')) {

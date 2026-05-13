@@ -39,21 +39,21 @@ class MueblesController extends Controller
         ]);
 
         // Per-page válido
-        $params['per_page'] = in_array((int)($params['per_page'] ?? 12), [12, 24, 48])
-            ? (int) $params['per_page']
-            : 12;
+        $perPage = (int) ($params['per_page'] ?? 12);
+        $params['per_page'] = in_array($perPage, [12, 24, 48]) ? $perPage : 12;
 
         $respuesta  = $this->mueblesService->getAllMuebles($params);
         $muebles    = $respuesta['data'] ?? [];
+        $meta       = $respuesta['meta'] ?? $respuesta; // compatibilidad: sin Resources usa top-level
         $categorias = $this->mueblesService->getCategorias();
 
         $paginacion = [
-            'current_page' => $respuesta['current_page'] ?? 1,
-            'last_page'    => $respuesta['last_page']    ?? 1,
-            'total'        => $respuesta['total']        ?? 0,
-            'from'         => $respuesta['from']         ?? ($muebles ? 1 : 0),
-            'to'           => $respuesta['to']           ?? count($muebles),
-            'per_page'     => $respuesta['per_page']     ?? $params['per_page'],
+            'current_page' => $meta['current_page'] ?? 1,
+            'last_page'    => $meta['last_page']    ?? 1,
+            'total'        => $meta['total']        ?? 0,
+            'from'         => $meta['from']         ?? ($muebles ? 1 : 0),
+            'to'           => $meta['to']           ?? count($muebles),
+            'per_page'     => $meta['per_page']     ?? $params['per_page'],
         ];
 
         return view('muebles.index', compact('muebles', 'paginacion', 'categorias'));
