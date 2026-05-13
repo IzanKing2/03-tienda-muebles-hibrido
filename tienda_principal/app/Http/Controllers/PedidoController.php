@@ -5,10 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Carrito;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
+use App\Services\MueblesService;
 use Illuminate\Http\Request;
 
 class PedidoController extends Controller
 {
+    /**
+     * Inyectamos el servicio de muebles para poder actualizar el stock
+     * de los productos al confirmar una compra.
+     *
+     * ¿Qué es la inyección de dependencias?
+     * Laravel automáticamente pasa una instancia de MueblesService
+     * cuando crea este controlador, sin que tengamos que hacerlo manualmente.
+     */
+    public function __construct(protected MueblesService $mueblesService) {}
+
     private function requireAuth()
     {
         if (!session('auth_token')) {
@@ -71,7 +82,12 @@ class PedidoController extends Controller
             'notas'            => $request->notas,
         ]);
 
+        // Obtener el token de autenticación del usuario para poder
+        // comunicarnos con la API de muebles (necesita permisos)
+        $token = session('auth_token');
+
         foreach ($carrito->items as $item) {
+            // Crear el registro de cada producto en la tabla de items del pedido
             PedidoItem::create([
                 'pedido_id'  => $pedido->id,
                 'producto_id'=> $item->producto_id,
@@ -79,6 +95,15 @@ class PedidoController extends Controller
                 'precio'     => $item->precio,
                 'cantidad'   => $item->cantidad,
             ]);
+
+            // ── DESCONTAR STOCK ──────────────────────────────────────────
+            // Por cada producto comprado, restamos la cantidad del stock
+            // en la API de muebles. Así el inventario se mantiene actualizado.
+            $this->mueblesService->updateStock(
+                $item->producto_id,
+                $item->cantidad,
+                $token
+            );
         }
 
         $carrito->items()->delete();

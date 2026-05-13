@@ -104,4 +104,64 @@
 
                                         <div class="col-sm-6">
                                             <label for="apellidos" class="form-label fw-600" style="font-size:.85rem;">Apellidos</label>
-                     
+                                            <input type="text" id="apellidos" name="apellidos"
+                                                   class="form-control @error('apellidos') is-invalid @enderror"
+                                                   value="{{ old('apellidos') }}" required placeholder="García López">
+                                            @error('apellidos')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="email" class="form-label fw-600" style="font-size:.85rem;">Correo electrónico</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-envelope" style="font-size:.8rem;"></i></span>
+                                                <input type="email" id="email" name="email"
+                                                       class="form-control @error('email') is-invalid @enderror"
+                                                       value="{{ old('email') }}" required placeholder="tu@email.com">
+                                            </div>
+                                            @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                        </div>
+
+                                        <div class="col-sm-6">
+                                            <label for="password" class="form-label fw-600" style="font-size:.85rem;">Contraseña</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-lock" style="font-size:.8rem;"></i></span>
+                                                <input type="password" id="password" name="password"
+                                                       class="form-control" required placeholder="Mín. 6 caracteres">
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-6">
+                                            <label for="password_confirmation" class="form-label fw-600" style="font-size:.85rem;">Confirmar</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-lock" style="font-size:.8rem;"></i></span>
+                                                <input type="password" id="password_confirmation" name="password_confirmation"
+                                                       class="form-control" required placeholder="Repite la contraseña">
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12 mt-3">
+                                            <button type="submit" class="btn btn-elegant-dark w-100 py-2" style="font-size:.9rem;">
+                                                Crear cuenta <i class="fas fa-arrow-right ms-2"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <div class="text-center mt-4">
+                                    <p class="text-muted mb-1" style="font-size:.85rem;">
+                                        ¿Ya tienes cuenta?
+                                        <a href="{{ route('login') }}" class="fw-600 text-decoration-none" style="color:var(--color-accent);">Inicia sesión</a>
+                                    </p>
+                                    <a href="{{ route('muebles.index') }}" class="text-muted" style="font-size:.78rem;text-decoration:none;">
+                                        <i class="fas fa-arrow-left me-1"></i>Volver al catálogo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

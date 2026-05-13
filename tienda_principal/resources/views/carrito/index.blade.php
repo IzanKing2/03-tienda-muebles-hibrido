@@ -2,114 +2,121 @@
 
 @section('title', 'Mi Carrito')
 
-@section('content')
-<div class="container py-5">
+@section('head')
+<style>
+    .cart-table th {
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        font-weight: 600;
+        color: #fff;
+        background: var(--color-primary);
+        padding: .85rem 1rem;
+    }
+    .cart-table td { padding: .85rem 1rem; vertical-align: middle; }
+    .cart-table tbody tr { border-bottom: 1px solid var(--color-border); transition: var(--transition); }
+    .cart-table tbody tr:hover { background: var(--color-surface); }
+    .cart-img {
+        width: 56px; height: 56px;
+        object-fit: cover;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-border);
+    }
+    .summary-card {
+        background: var(--color-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+</style>
+@endsection
 
-    <h1 class="h3 fw-bold mb-4"><i class="fas fa-shopping-cart me-2"></i>Mi Carrito</h1>
+@section('content')
+<div class="container py-5 animate-in">
+
+    <h1 class="fw-700 ls-tight mb-4" style="font-size:1.5rem;">
+        <i class="fas fa-shopping-bag me-2" style="color:var(--color-accent);"></i>Mi Carrito
+    </h1>
 
     @if($carrito->items->isEmpty())
         <div class="text-center py-5">
-            <i class="fas fa-cart-arrow-down fa-4x text-secondary opacity-50 mb-4"></i>
-            <h4 class="text-muted">Tu carrito está vacío</h4>
-            <p class="text-muted">Explora nuestro catálogo y añade productos que te gusten.</p>
-            <a href="{{ route('muebles.index') }}" class="btn btn-dark mt-2">
+            <div style="width:80px;height:80px;border-radius:50%;background:var(--color-surface);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+                <i class="fas fa-shopping-bag fa-2x" style="color:var(--color-border);"></i>
+            </div>
+            <h4 style="color:var(--color-text-muted);font-weight:600;">Tu carrito está vacío</h4>
+            <p class="text-muted" style="font-size:.88rem;">Explora nuestro catálogo y añade productos.</p>
+            <a href="{{ route('muebles.index') }}" class="btn btn-elegant-dark mt-2">
                 <i class="fas fa-couch me-2"></i>Ver catálogo
             </a>
         </div>
     @else
         <div class="row g-4">
-
-            {{-- Tabla de items --}}
             <div class="col-lg-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
-                                <thead class="table-dark">
+                <div class="summary-card">
+                    <div class="table-responsive">
+                        <table class="table mb-0 cart-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center" style="width:130px;">Cantidad</th>
+                                    <th class="text-end" style="width:100px;">Precio</th>
+                                    <th class="text-end" style="width:100px;">Subtotal</th>
+                                    <th style="width:44px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($carrito->items as $item)
                                     <tr>
-                                        <th>Producto</th>
-                                        <th class="text-center" style="width:140px;">Cantidad</th>
-                                        <th class="text-end" style="width:110px;">Precio</th>
-                                        <th class="text-end" style="width:110px;">Subtotal</th>
-                                        <th style="width:50px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($carrito->items as $item)
-                                        <tr>
-                                            {{-- Imagen + nombre --}}
-                                            <td>
-                                                <div class="d-flex align-items-center gap-3">
-                                                    @if($item->imagen)
-                                                        <img src="{{ asset('storage/' . $item->imagen) }}"
-                                                             alt="{{ $item->nombre }}"
-                                                             class="rounded"
-                                                             style="width:60px;height:60px;object-fit:cover;">
-                                                    @else
-                                                        <div class="d-flex align-items-center justify-content-center bg-light rounded"
-                                                             style="width:60px;height:60px;">
-                                                            <i class="fas fa-couch text-secondary"></i>
-                                                        </div>
-                                                    @endif
-                                                    <div>
-                                                        <div class="fw-semibold">{{ $item->nombre }}</div>
-                                                        <div class="small text-muted">{{ number_format($item->precio, 2) }} € / ud.</div>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                @if($item->imagen)
+                                                    <img src="{{ asset('storage/' . $item->imagen) }}" alt="{{ $item->nombre }}" class="cart-img">
+                                                @else
+                                                    <div class="cart-img d-flex align-items-center justify-content-center" style="background:var(--color-surface);">
+                                                        <i class="fas fa-couch" style="color:var(--color-border);"></i>
                                                     </div>
+                                                @endif
+                                                <div>
+                                                    <div class="fw-600" style="font-size:.88rem;">{{ $item->nombre }}</div>
+                                                    <div style="font-size:.75rem;color:var(--color-text-muted);">{{ number_format($item->precio, 2) }} € / ud.</div>
                                                 </div>
-                                            </td>
-
-                                            {{-- Actualizar cantidad (usa item.id de BD) --}}
-                                            <td class="text-center">
-                                                <form action="{{ route('carrito.actualizar', $item->id) }}"
-                                                      method="POST" class="d-flex align-items-center gap-1 justify-content-center">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="number" name="cantidad"
-                                                           value="{{ $item->cantidad }}"
-                                                           min="1" max="99"
-                                                           class="form-control form-control-sm text-center"
-                                                           style="width:62px;">
-                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Actualizar">
-                                                        <i class="fas fa-sync-alt"></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-
-                                            {{-- Precio --}}
-                                            <td class="text-end fw-semibold">{{ number_format($item->precio, 2) }} €</td>
-
-                                            {{-- Subtotal --}}
-                                            <td class="text-end fw-bold">{{ number_format($item->subtotal(), 2) }} €</td>
-
-                                            {{-- Eliminar (usa item.id de BD) --}}
-                                            <td class="text-end">
-                                                <form action="{{ route('carrito.eliminar', $item->id) }}"
-                                                      method="POST"
-                                                      onsubmit="return confirm('¿Eliminar este producto del carrito?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <form action="{{ route('carrito.actualizar', $item->id) }}" method="POST" class="d-flex align-items-center gap-1 justify-content-center">
+                                                @csrf @method('PATCH')
+                                                <input type="number" name="cantidad" value="{{ $item->cantidad }}" min="1" max="99"
+                                                       class="form-control form-control-sm text-center" style="width:56px;border:1.5px solid var(--color-border);border-radius:var(--radius-sm);font-size:.82rem;">
+                                                <button type="submit" class="btn btn-sm btn-outline-elegant" title="Actualizar" style="padding:.2rem .4rem;">
+                                                    <i class="fas fa-sync-alt" style="font-size:.65rem;"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td class="text-end fw-500" style="font-size:.88rem;">{{ number_format($item->precio, 2) }} €</td>
+                                        <td class="text-end fw-700" style="font-size:.92rem;">{{ number_format($item->subtotal(), 2) }} €</td>
+                                        <td class="text-end">
+                                            <form action="{{ route('carrito.eliminar', $item->id) }}" method="POST"
+                                                  onsubmit="return confirm('¿Eliminar este producto?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-sm" title="Eliminar" style="color:var(--color-danger);padding:.2rem .4rem;">
+                                                    <i class="fas fa-trash" style="font-size:.75rem;"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div class="mt-3 d-flex gap-2">
-                    <a href="{{ route('muebles.index') }}" class="btn btn-outline-dark btn-sm">
+                    <a href="{{ route('muebles.index') }}" class="btn btn-outline-elegant btn-sm">
                         <i class="fas fa-arrow-left me-1"></i>Seguir comprando
                     </a>
-                    <form action="{{ route('carrito.vaciar') }}" method="POST"
-                          onsubmit="return confirm('¿Vaciar todo el carrito?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <form action="{{ route('carrito.vaciar') }}" method="POST" onsubmit="return confirm('¿Vaciar todo el carrito?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-sm" style="color:var(--color-danger);border:1.5px solid rgba(192,57,43,.2);border-radius:var(--radius-sm);font-size:.82rem;">
                             <i class="fas fa-trash-alt me-1"></i>Vaciar carrito
                         </button>
                     </form>
@@ -118,36 +125,29 @@
 
             {{-- Resumen --}}
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 sticky-top" style="top:80px;">
-                    <div class="card-header bg-dark text-white fw-semibold">
-                        <i class="fas fa-receipt me-2"></i>Resumen del pedido
+                <div class="summary-card sticky-top" style="top:80px;">
+                    <div style="background:var(--color-primary);color:#fff;padding:.85rem 1.2rem;font-weight:600;font-size:.88rem;">
+                        <i class="fas fa-receipt me-2" style="color:var(--color-accent);"></i>Resumen
                     </div>
-                    <div class="card-body">
+                    <div class="p-3">
                         @foreach($carrito->items as $item)
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-truncate me-2" style="max-width:180px;">
-                                    {{ $item->nombre }} × {{ $item->cantidad }}
-                                </span>
-                                <span class="fw-semibold text-nowrap">{{ number_format($item->subtotal(), 2) }} €</span>
+                            <div class="d-flex justify-content-between mb-2" style="font-size:.82rem;">
+                                <span class="text-truncate me-2" style="max-width:170px;color:var(--color-text-muted);">{{ $item->nombre }} × {{ $item->cantidad }}</span>
+                                <span class="fw-600 text-nowrap">{{ number_format($item->subtotal(), 2) }} €</span>
                             </div>
                         @endforeach
-
-                        <hr>
-
-                        <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+                        <hr style="border-color:var(--color-border);">
+                        <div class="d-flex justify-content-between fw-700 mb-4" style="font-size:1.2rem;">
                             <span>Total</span>
-                            <span>{{ number_format($total, 2) }} €</span>
+                            <span style="color:var(--color-primary);">{{ number_format($total, 2) }} €</span>
                         </div>
-
-                        <a href="{{ route('checkout') }}" class="btn btn-warning w-100 fw-semibold">
+                        <a href="{{ route('checkout') }}" class="btn btn-accent w-100 fw-600">
                             <i class="fas fa-credit-card me-2"></i>Proceder al pago
                         </a>
                     </div>
                 </div>
             </div>
-
         </div>
     @endif
-
 </div>
 @endsection

@@ -17,6 +17,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/muebles', [ProductoController::class, 'store']);
         Route::put('/muebles/{id}', [ProductoController::class, 'update']);
         Route::delete('/muebles/{id}', [ProductoController::class, 'destroy']);
+
+        // Endpoint específico para descontar stock tras una compra
+        // Usa PATCH porque solo modifica parcialmente el recurso (el stock)
+        Route::patch('/muebles/{id}/stock', [ProductoController::class, 'decrementStock']);
         
         Route::post('/categorias', [CategoriaController::class, 'store']);
         Route::put('/categorias/{id}', [CategoriaController::class, 'update']);

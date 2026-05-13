@@ -201,4 +201,75 @@ class ProductoController extends Controller
         $producto->delete();
         return response()->json(['mensaje' => 'Eliminado']);
     }
+
+    /**
+     * Descontar stock de un producto tras una compra.
+     *
+     * Este endpoint es específico para el flujo de compra.
+     * Acepta el permiso 'pedidos.crear' (que tienen los clientes)
+     * además de 'muebles.editar' (que tienen los admins/gestores).
+     *
+     * Usamos PATCH en vez de PUT porque solo modificamos un campo
+     * parcialmente (el stock), no todo el recurso.
+     */
+    #[OA\Patch(
+        path: '/api/muebles/{id}/stock',
+        summary: 'Descontar stock de un producto tras una compra',
+        tags: ['Productos'],
+        security: [['sanctum' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['cantidad'],
+            properties: [
+                new OA\Property(property: 'cantidad', type: 'integer', description: 'Unidades a descontar del stock'),
+            ]
+        )),
+        responses: [
+            new OA\Response(response: 200, description: 'Stock actualizado'),
+            new OA\Response(response: 403, description: 'No autorizado'),
+            new OA\Response(response: 404, description: 'Producto no encontrado'),
+            new OA\Response(response: 422, description: 'Cantidad inválida o stock insuficiente'),
+        ]
+    )]
+    public function decrementStock(Request $request, $id)
+    {
+        // Permitimos tanto a clientes (pedidos.crear) como a admins (muebles.editar)
+        if (!$request->user()->tokenCan('pedidos.crear') && !$request->user()->tokenCan('muebles.editar')) {
+            return response()->json(['mensaje' => 'No autorizado'], 403);
+        }
+
+        $producto = Producto::find($id);
+        if (!$producto) {
+            return response()->json(['mensaje' => 'Producto no encontrado'], 404);
+        }
+
+        // Validar que la cantidad sea un número positivo
+        $validator = Validator::make($request->all(), [
+            'cantidad' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errores' => $validator->errors()], 422);
+        }
+
+        $cantidad = (int) $request->cantidad;
+
+        // Verificar que hay suficiente stock
+        if ($producto->stock < $cantidad) {
+            return response()->json([
+                'mensaje' => 'Stock insuficiente. Disponible: ' . $producto->stock,
+            ], 422);
+        }
+
+        // Descontar el stock
+        $producto->stock = $producto->stock - $cantidad;
+        $producto->save();
+
+        return response()->json([
+            'mensaje'    => 'Stock actualizado correctamente',
+            'producto_id'=> $producto->id,
+            'stock_anterior' => $producto->stock + $cantidad,
+            'stock_actual'   => $producto->stock,
+        ]);
+    }
 }

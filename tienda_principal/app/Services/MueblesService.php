@@ -104,4 +104,35 @@ class MueblesService
             return false;
         }
     }
+
+    /**
+     * Descontar stock de un producto tras una compra.
+     *
+     * Llama al endpoint PATCH /muebles/{id}/stock de la API de muebles,
+     * que se encarga internamente de restar la cantidad del stock actual.
+     *
+     * ¿Por qué PATCH y no PUT?
+     * - PUT reemplaza todo el recurso (necesita todos los campos)
+     * - PATCH modifica solo una parte (en este caso, el stock)
+     *
+     * @param int    $productoId  ID del producto a actualizar
+     * @param int    $cantidad    Unidades compradas que se restan del stock
+     * @param string $token       Token de autenticación para la API
+     * @return bool  true si la actualización fue exitosa
+     */
+    public function updateStock(int $productoId, int $cantidad, string $token): bool
+    {
+        try {
+            // Enviamos la cantidad a descontar al endpoint dedicado de la API
+            // La API se encarga de verificar que haya suficiente stock
+            $response = Http::withToken($token)->patch(
+                "{$this->baseUrl}/muebles/{$productoId}/stock",
+                ['cantidad' => $cantidad]
+            );
+
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
 }
