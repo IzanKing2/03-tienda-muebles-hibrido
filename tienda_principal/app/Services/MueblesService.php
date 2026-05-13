@@ -13,10 +13,10 @@ class MueblesService
         $this->baseUrl = config('services.api_muebles.url');
     }
 
-    public function getAllMuebles(): array
+    public function getAllMuebles(array $params = []): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/muebles");
+            $response = Http::get("{$this->baseUrl}/muebles", $params);
             return $response->successful() ? $response->json() : ['data' => []];
         } catch (\Throwable) {
             return ['data' => [], 'error' => 'Servicio de muebles no disponible.'];

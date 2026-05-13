@@ -1,33 +1,68 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar sesión – Tienda de Muebles</title>
-</head>
-<body>
-    <h1>Iniciar sesión</h1>
+@extends('layouts.app')
 
-    @if ($errors->any())
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    @endif
+@section('title', 'Iniciar sesión')
 
-    <form method="POST" action="{{ route('login.post') }}">
-        @csrf
+@section('content')
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
 
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus>
+            <div class="text-center mb-4">
+                <i class="fas fa-couch fa-3x text-dark mb-2"></i>
+                <h2 class="fw-bold">Iniciar sesión</h2>
+                <p class="text-muted">Accede a tu cuenta de MueblesHíbrido</p>
+            </div>
 
-        <label for="password">Contraseña</label>
-        <input type="password" id="password" name="password" required>
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {{ $errors->first() }}
+                </div>
+            @endif
 
-        <button type="submit">Entrar</button>
-    </form>
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ route('login.post') }}">
+                        @csrf
 
-    <p>¿No tienes cuenta? <a href="{{ route('register') }}">Regístrate</a></p>
-</body>
-</html>
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold">Correo electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope text-muted"></i></span>
+                                <input type="email" id="email" name="email"
+                                       class="form-control @error('email') is-invalid @enderror"
+                                       value="{{ old('email') }}" required autofocus
+                                       placeholder="tu@email.com">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock text-muted"></i></span>
+                                <input type="password" id="password" name="password"
+                                       class="form-control" required placeholder="••••••">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark w-100 py-2">
+                            <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <p class="text-center mt-4 text-muted">
+                ¿No tienes cuenta?
+                <a href="{{ route('register') }}" class="text-dark fw-semibold">Regístrate</a>
+            </p>
+            <p class="text-center">
+                <a href="{{ route('muebles.index') }}" class="text-muted small">
+                    <i class="fas fa-arrow-left me-1"></i>Volver al catálogo
+                </a>
+            </p>
+
+        </div>
+    </div>
+</div>
+@endsection
