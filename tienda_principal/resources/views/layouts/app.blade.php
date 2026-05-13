@@ -14,6 +14,7 @@
         .hero { background: linear-gradient(135deg, #2c2c2c 0%, #5c4033 100%); }
         .badge-rol { font-size: .75rem; }
         footer { border-top: 1px solid #dee2e6; }
+        .cart-badge { font-size: .65rem; top: 2px; right: -4px; }
     </style>
     @yield('head')
 </head>
@@ -33,11 +34,52 @@
                     <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}">Inicio</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('muebles*') ? 'active' : '' }}" href="{{ route('muebles.index') }}">Catálogo</a>
+                    <a class="nav-link {{ request()->is('muebles*') && !request()->is('admin*') ? 'active' : '' }}"
+                       href="{{ route('muebles.index') }}">Catálogo</a>
                 </li>
+                @if(session('auth_token') && in_array('admin.panel', session('auth_abilities', [])))
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->is('admin*') ? 'active' : '' }}"
+                           href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-tools me-1"></i>Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.muebles.index') }}">
+                                <i class="fas fa-couch me-2"></i>Gestión de Muebles
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.usuarios.index') }}">
+                                <i class="fas fa-users me-2"></i>Gestión de Usuarios
+                            </a></li>
+                        </ul>
+                    </li>
+                @elseif(session('auth_token') && in_array('muebles.crear', session('auth_abilities', [])))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('admin/muebles*') ? 'active' : '' }}"
+                           href="{{ route('admin.muebles.index') }}">
+                            <i class="fas fa-tools me-1"></i>Gestión
+                        </a>
+                    </li>
+                @endif
             </ul>
             <ul class="navbar-nav ms-auto align-items-center gap-2">
                 @if(session('auth_token'))
+                    {{-- Carrito --}}
+                    @php $carritoCount = count(session('carrito', [])); @endphp
+                    <li class="nav-item">
+                        <a class="nav-link position-relative {{ request()->is('carrito*') ? 'active' : '' }}"
+                           href="{{ route('carrito.index') }}" title="Carrito">
+                            <i class="fas fa-shopping-cart"></i>
+                            @if($carritoCount > 0)
+                                <span class="position-absolute badge rounded-pill bg-warning text-dark cart-badge">
+                                    {{ $carritoCount }}
+                                </span>
+                            @endif
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('profile') }}">
                             <i class="fas fa-user-circle me-1"></i>

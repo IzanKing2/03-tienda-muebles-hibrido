@@ -116,12 +116,28 @@
                 @endif
             </div>
 
-            <div class="d-flex gap-3 flex-wrap">
+            {{-- Acciones --}}
+            <div class="d-flex gap-3 flex-wrap align-items-center">
                 <a href="{{ route('muebles.index') }}" class="btn btn-outline-dark">
                     <i class="fas fa-arrow-left me-1"></i>Volver al catálogo
                 </a>
+
                 @if(session('auth_token'))
-                    {{-- Aquí se puede añadir lógica de carrito en el futuro --}}
+                    @if(($mueble['stock'] ?? 0) > 0)
+                        <form action="{{ route('carrito.agregar') }}" method="POST" class="d-flex gap-2 align-items-center">
+                            @csrf
+                            <input type="hidden" name="producto_id" value="{{ $mueble['id'] }}">
+                            <input type="number" name="cantidad" value="1" min="1" max="{{ $mueble['stock'] }}"
+                                   class="form-control" style="width:75px;" aria-label="Cantidad">
+                            <button type="submit" class="btn btn-warning fw-semibold">
+                                <i class="fas fa-cart-plus me-1"></i>Añadir al carrito
+                            </button>
+                        </form>
+                    @else
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-times me-1"></i>Sin stock
+                        </button>
+                    @endif
                 @else
                     <a href="{{ route('login') }}" class="btn btn-dark">
                         <i class="fas fa-sign-in-alt me-1"></i>Inicia sesión para comprar

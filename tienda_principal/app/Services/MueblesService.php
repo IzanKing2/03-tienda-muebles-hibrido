@@ -33,23 +33,41 @@ class MueblesService
         }
     }
 
-    public function createMueble(array $data, string $token): bool
+    public function getCategorias(): array
     {
         try {
-            $response = Http::withToken($token)->post("{$this->baseUrl}/muebles", $data);
-            return $response->successful();
+            $response = Http::get("{$this->baseUrl}/categorias");
+            return $response->successful() ? ($response->json()['data'] ?? $response->json()) : [];
         } catch (\Throwable) {
-            return false;
+            return [];
         }
     }
 
-    public function updateMueble(int $id, array $data, string $token): bool
+    public function createMueble(array $data, string $token): array
+    {
+        try {
+            $response = Http::withToken($token)->post("{$this->baseUrl}/muebles", $data);
+            return [
+                'success' => $response->successful(),
+                'data'    => $response->json(),
+                'status'  => $response->status(),
+            ];
+        } catch (\Throwable) {
+            return ['success' => false, 'data' => [], 'status' => 500];
+        }
+    }
+
+    public function updateMueble(int $id, array $data, string $token): array
     {
         try {
             $response = Http::withToken($token)->put("{$this->baseUrl}/muebles/{$id}", $data);
-            return $response->successful();
+            return [
+                'success' => $response->successful(),
+                'data'    => $response->json(),
+                'status'  => $response->status(),
+            ];
         } catch (\Throwable) {
-            return false;
+            return ['success' => false, 'data' => [], 'status' => 500];
         }
     }
 
@@ -57,6 +75,30 @@ class MueblesService
     {
         try {
             $response = Http::withToken($token)->delete("{$this->baseUrl}/muebles/{$id}");
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    public function createCategoria(array $data, string $token): array
+    {
+        try {
+            $response = Http::withToken($token)->post("{$this->baseUrl}/categorias", $data);
+            return [
+                'success' => $response->successful(),
+                'data'    => $response->json(),
+                'status'  => $response->status(),
+            ];
+        } catch (\Throwable) {
+            return ['success' => false, 'data' => [], 'status' => 500];
+        }
+    }
+
+    public function deleteCategoria(int $id, string $token): bool
+    {
+        try {
+            $response = Http::withToken($token)->delete("{$this->baseUrl}/categorias/{$id}");
             return $response->successful();
         } catch (\Throwable) {
             return false;
