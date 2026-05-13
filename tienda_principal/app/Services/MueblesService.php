@@ -6,44 +6,60 @@ use Illuminate\Support\Facades\Http;
 
 class MueblesService
 {
-    protected $baseUrl;
+    protected string $baseUrl;
 
     public function __construct()
     {
-        $this->baseUrl = env('API_MUEBLES_URL');
+        $this->baseUrl = config('services.api_muebles.url');
     }
 
-    public function getAllMuebles()
+    public function getAllMuebles(): array
     {
         try {
             $response = Http::get("{$this->baseUrl}/muebles");
             return $response->successful() ? $response->json() : ['data' => []];
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             return ['data' => [], 'error' => 'Servicio de muebles no disponible.'];
         }
     }
 
-    public function getMuebleById($id)
+    public function getMuebleById(int $id): array|null
     {
-        $response = Http::get("{$this->baseUrl}/muebles/{$id}");
-        return $response->successful() ? $response->json() : null;
+        try {
+            $response = Http::get("{$this->baseUrl}/muebles/{$id}");
+            return $response->successful() ? $response->json() : null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
-    public function createMueble($data, $token)
+    public function createMueble(array $data, string $token): bool
     {
-        $response = Http::withToken($token)->post("{$this->baseUrl}/muebles", $data);
-        return $response->successful();
+        try {
+            $response = Http::withToken($token)->post("{$this->baseUrl}/muebles", $data);
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
-    public function updateMueble($id, $data, $token)
+    public function updateMueble(int $id, array $data, string $token): bool
     {
-        $response = Http::withToken($token)->put("{$this->baseUrl}/muebles/{$id}", $data);
-        return $response->successful();
+        try {
+            $response = Http::withToken($token)->put("{$this->baseUrl}/muebles/{$id}", $data);
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
-    public function deleteMueble($id, $token)
+    public function deleteMueble(int $id, string $token): bool
     {
-        $response = Http::withToken($token)->delete("{$this->baseUrl}/muebles/{$id}");
-        return $response->successful();
+        try {
+            $response = Http::withToken($token)->delete("{$this->baseUrl}/muebles/{$id}");
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

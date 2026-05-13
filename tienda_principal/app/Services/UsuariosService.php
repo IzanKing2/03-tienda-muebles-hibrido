@@ -6,54 +6,74 @@ use Illuminate\Support\Facades\Http;
 
 class UsuariosService
 {
-    protected $baseUrl;
+    protected string $baseUrl;
 
     public function __construct()
     {
-        $this->baseUrl = env('API_USUARIOS_URL', 'http://127.0.0.1:8001/api/v1');
+        $this->baseUrl = config('services.api_usuarios.url');
     }
 
-    public function register($data)
+    public function register(array $data): array
     {
-        $response = Http::post("{$this->baseUrl}/registrar", $data);
-        return [
-            'success' => $response->successful(),
-            'status' => $response->status(),
-            'data' => $response->json()
-        ];
+        try {
+            $response = Http::post("{$this->baseUrl}/registrar", $data);
+            return [
+                'success' => $response->successful(),
+                'status'  => $response->status(),
+                'data'    => $response->json(),
+            ];
+        } catch (\Throwable) {
+            return [
+                'success' => false,
+                'status'  => 500,
+                'data'    => ['mensaje' => 'Error de conexión con el servicio de usuarios.'],
+            ];
+        }
     }
 
-    public function login($credentials)
+    public function login(array $credentials): array
     {
-        $response = Http::post("{$this->baseUrl}/login", $credentials);
-        return [
-            'success' => $response->successful(),
-            'status' => $response->status(),
-            'data' => $response->json()
-        ];
+        try {
+            $response = Http::post("{$this->baseUrl}/login", $credentials);
+            return [
+                'success' => $response->successful(),
+                'status'  => $response->status(),
+                'data'    => $response->json(),
+            ];
+        } catch (\Throwable) {
+            return [
+                'success' => false,
+                'status'  => 500,
+                'data'    => ['mensaje' => 'Error de conexión con el servicio de usuarios.'],
+            ];
+        }
     }
 
-    public function getPerfil($token)
+    public function getPerfil(string $token): array
     {
         try {
             $response = Http::withToken($token)->get("{$this->baseUrl}/perfil");
             return [
                 'success' => $response->successful(),
-                'status' => $response->status(),
-                'data' => $response->json()
+                'status'  => $response->status(),
+                'data'    => $response->json(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             return [
                 'success' => false,
-                'status' => 500,
-                'data' => ['mensaje' => 'Error de conexión con el servicio de usuarios.']
+                'status'  => 500,
+                'data'    => ['mensaje' => 'Error de conexión con el servicio de usuarios.'],
             ];
         }
     }
 
-    public function logout($token)
+    public function logout(string $token): bool
     {
-        $response = Http::withToken($token)->post("{$this->baseUrl}/logout");
-        return $response->successful();
+        try {
+            $response = Http::withToken($token)->post("{$this->baseUrl}/logout");
+            return $response->successful();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

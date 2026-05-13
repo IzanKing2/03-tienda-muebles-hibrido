@@ -64,6 +64,23 @@ return [
             ]) : [],
         ],
 
+        // Conexión a la BD de api_usuarios para validar tokens Sanctum compartidos
+        'usuarios_db' => [
+            'driver' => 'mysql',
+            'host' => env('DB_USUARIOS_HOST', '127.0.0.1'),
+            'port' => env('DB_USUARIOS_PORT', '3306'),
+            'database' => env('DB_USUARIOS_DATABASE', 'tienda_usuarios'),
+            'username' => env('DB_USUARIOS_USERNAME', 'root'),
+            'password' => env('DB_USUARIOS_PASSWORD', ''),
+            'unix_socket' => '',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

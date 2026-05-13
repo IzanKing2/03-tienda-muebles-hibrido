@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    private function getAbilitiesForRole($roleName)
+    private function getAbilitiesForRole(string $roleName): array
     {
         switch ($roleName) {
             case 'Administrador':
@@ -44,6 +44,10 @@ class AuthController extends Controller
         }
 
         $clienteRole = Role::where('nombre', 'Cliente')->first();
+
+        if (!$clienteRole) {
+            return response()->json(['mensaje' => 'Error de configuración del servidor: rol Cliente no encontrado.'], 500);
+        }
 
         $user = User::create([
             'rol_id' => $clienteRole->id,
