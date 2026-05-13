@@ -35,12 +35,20 @@ class UsuariosService
 
     public function getPerfil($token)
     {
-        $response = Http::withToken($token)->get("{$this->baseUrl}/perfil");
-        return [
-            'success' => $response->successful(),
-            'status' => $response->status(),
-            'data' => $response->json()
-        ];
+        try {
+            $response = Http::withToken($token)->get("{$this->baseUrl}/perfil");
+            return [
+                'success' => $response->successful(),
+                'status' => $response->status(),
+                'data' => $response->json()
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'status' => 500,
+                'data' => ['mensaje' => 'Error de conexión con el servicio de usuarios.']
+            ];
+        }
     }
 
     public function logout($token)

@@ -82,4 +82,40 @@ class MueblesTest extends TestCase
         $response->assertStatus(201);
         $this->assertDatabaseHas('productos', ['nombre' => 'Silla Nueva']);
     }
+
+    public function test_user_with_ability_can_update_mueble()
+    {
+        $user = User::create(['name' => 'Gestor', 'email' => 'gestor@test.com', 'password' => 'secret']);
+        $token = $user->createToken('test', ['muebles.editar'])->plainTextToken;
+
+        $producto = Producto::create([
+            'nombre' => 'Viejo', 'descripcion' => 'Desc', 'precio' => 10, 'stock' => 5, 
+            'materiales' => 'Madera', 'dimensiones' => '1x1', 'color_principal' => 'Rojo'
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->putJson("/api/v1/muebles/{$producto->id}", [
+                'nombre' => 'Actualizado'
+            ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('productos', ['id' => $producto->id, 'nombre' => 'Actualizado']);
+    }
+
+    public function test_user_with_ability_can_delete_mueble()
+    {
+        $user = User::create(['name' => 'Admin', 'email' => 'admin@test.com', 'password' => 'secret']);
+        $token = $user->createToken('test', ['muebles.eliminar'])->plainTextToken;
+
+        $producto = Producto::create([
+            'nombre' => 'AEliminar', 'descripcion' => 'Desc', 'precio' => 10, 'stock' => 5, 
+            'materiales' => 'Madera', 'dimensiones' => '1x1', 'color_principal' => 'Rojo'
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->deleteJson("/api/v1/muebles/{$producto->id}");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseMissing('productos', ['id' => $producto->id]);
+    }
 }

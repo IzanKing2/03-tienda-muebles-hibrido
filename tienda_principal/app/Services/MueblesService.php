@@ -15,8 +15,12 @@ class MueblesService
 
     public function getAllMuebles()
     {
-        $response = Http::get("{$this->baseUrl}/muebles");
-        return $response->successful() ? $response->json() : [];
+        try {
+            $response = Http::get("{$this->baseUrl}/muebles");
+            return $response->successful() ? $response->json() : ['data' => []];
+        } catch (\Exception $e) {
+            return ['data' => [], 'error' => 'Servicio de muebles no disponible.'];
+        }
     }
 
     public function getMuebleById($id)
