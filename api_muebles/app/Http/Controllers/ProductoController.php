@@ -12,13 +12,52 @@ class ProductoController extends Controller
     {
         $query = Producto::with('categorias', 'galeria.imagenes');
         
+        // Filter by category
         if ($request->has('categoria_id')) {
             $query->whereHas('categorias', function($q) use ($request) {
                 $q->where('categorias.id', $request->categoria_id);
             });
         }
 
-        return response()->json($query->get());
+        // Filter by price range
+        if ($request->has('precio_min')) {
+            $query->where('precio', '>=', $request->precio_min);
+        }
+        if ($request->has('precio_max')) {
+            $query->where('precio', '<=', $request->precio_max);
+        }
+
+        // Filter by exact color
+        if ($request->has('color')) {
+            $query->where('color_principal', $request->color);
+        }
+
+        // Filter by materials (contains)
+        if ($request->has('materiales')) {
+            $query->where('materiales', 'like', '%' . $request->materiales . '%');
+        }
+
+        // Text Search
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nombre', 'like', '%' . $search . '%')
+                  ->orWhere('descripcion', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Sorting
+        $sortField = $request->get('sort', 'id');
+        $sortOrder = $request->get('order', 'asc');
+        $allowedSorts = ['id', 'precio', 'nombre', 'created_at'];
+
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortOrder === 'desc' ? 'desc' : 'asc');
+        }
+
+        // Pagination
+        $perPage = $request->get('per_page', 12);
+        return response()->json($query->paginate($perPage));
     }
 
     public function show($id)

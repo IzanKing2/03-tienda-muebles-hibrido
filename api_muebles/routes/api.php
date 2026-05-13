@@ -21,5 +21,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/categorias', [CategoriaController::class, 'store']);
         Route::put('/categorias/{id}', [CategoriaController::class, 'update']);
         Route::delete('/categorias/{id}', [CategoriaController::class, 'destroy']);
+
+        Route::post('/muebles/{id}/imagenes', [ImagenController::class, 'store']);
+        Route::put('/imagenes/{id}/principal', [ImagenController::class, 'setPrincipal']);
+        Route::delete('/imagenes/{id}', [ImagenController::class, 'destroy']);
     });
 });
