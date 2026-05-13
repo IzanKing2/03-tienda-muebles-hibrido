@@ -1,8 +1,8 @@
 # Tienda de Muebles Híbrida — Documentación del Proyecto
 
 **Asignatura:** Desarrollo de Aplicaciones Web  
-**Alumno:** Saulespin555  
-**Fecha:** Mayo 2026  
+**Alumno:** Saúl Espino, Izan, Marisa y Diego  
+**Fecha:** 13 de Mayo 2026  
 **Tecnología principal:** PHP 8.3 / Laravel 13  
 
 ---
