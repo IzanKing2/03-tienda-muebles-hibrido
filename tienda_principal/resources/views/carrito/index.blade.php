@@ -7,7 +7,7 @@
 
     <h1 class="h3 fw-bold mb-4"><i class="fas fa-shopping-cart me-2"></i>Mi Carrito</h1>
 
-    @if(count($carrito) === 0)
+    @if($carrito->items->isEmpty())
         <div class="text-center py-5">
             <i class="fas fa-cart-arrow-down fa-4x text-secondary opacity-50 mb-4"></i>
             <h4 class="text-muted">Tu carrito está vacío</h4>
@@ -19,7 +19,7 @@
     @else
         <div class="row g-4">
 
-            {{-- Tabla de productos --}}
+            {{-- Tabla de items --}}
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-0">
@@ -28,21 +28,21 @@
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Producto</th>
-                                        <th class="text-center" style="width:130px;">Cantidad</th>
+                                        <th class="text-center" style="width:140px;">Cantidad</th>
                                         <th class="text-end" style="width:110px;">Precio</th>
                                         <th class="text-end" style="width:110px;">Subtotal</th>
                                         <th style="width:50px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($carrito as $item)
+                                    @foreach($carrito->items as $item)
                                         <tr>
                                             {{-- Imagen + nombre --}}
                                             <td>
                                                 <div class="d-flex align-items-center gap-3">
-                                                    @if($item['imagen'])
-                                                        <img src="{{ asset('storage/' . $item['imagen']) }}"
-                                                             alt="{{ $item['nombre'] }}"
+                                                    @if($item->imagen)
+                                                        <img src="{{ asset('storage/' . $item->imagen) }}"
+                                                             alt="{{ $item->nombre }}"
                                                              class="rounded"
                                                              style="width:60px;height:60px;object-fit:cover;">
                                                     @else
@@ -52,23 +52,23 @@
                                                         </div>
                                                     @endif
                                                     <div>
-                                                        <div class="fw-semibold">{{ $item['nombre'] }}</div>
-                                                        <div class="small text-muted">{{ number_format($item['precio'], 2) }} € / ud.</div>
+                                                        <div class="fw-semibold">{{ $item->nombre }}</div>
+                                                        <div class="small text-muted">{{ number_format($item->precio, 2) }} € / ud.</div>
                                                     </div>
                                                 </div>
                                             </td>
 
-                                            {{-- Actualizar cantidad --}}
+                                            {{-- Actualizar cantidad (usa item.id de BD) --}}
                                             <td class="text-center">
-                                                <form action="{{ route('carrito.actualizar', $item['id']) }}"
+                                                <form action="{{ route('carrito.actualizar', $item->id) }}"
                                                       method="POST" class="d-flex align-items-center gap-1 justify-content-center">
                                                     @csrf
                                                     @method('PATCH')
                                                     <input type="number" name="cantidad"
-                                                           value="{{ $item['cantidad'] }}"
-                                                           min="1" max="{{ $item['stock'] }}"
+                                                           value="{{ $item->cantidad }}"
+                                                           min="1" max="99"
                                                            class="form-control form-control-sm text-center"
-                                                           style="width:60px;">
+                                                           style="width:62px;">
                                                     <button type="submit" class="btn btn-sm btn-outline-secondary" title="Actualizar">
                                                         <i class="fas fa-sync-alt"></i>
                                                     </button>
@@ -76,16 +76,14 @@
                                             </td>
 
                                             {{-- Precio --}}
-                                            <td class="text-end fw-semibold">{{ number_format($item['precio'], 2) }} €</td>
+                                            <td class="text-end fw-semibold">{{ number_format($item->precio, 2) }} €</td>
 
                                             {{-- Subtotal --}}
-                                            <td class="text-end fw-bold">
-                                                {{ number_format($item['precio'] * $item['cantidad'], 2) }} €
-                                            </td>
+                                            <td class="text-end fw-bold">{{ number_format($item->subtotal(), 2) }} €</td>
 
-                                            {{-- Eliminar --}}
+                                            {{-- Eliminar (usa item.id de BD) --}}
                                             <td class="text-end">
-                                                <form action="{{ route('carrito.eliminar', $item['id']) }}"
+                                                <form action="{{ route('carrito.eliminar', $item->id) }}"
                                                       method="POST"
                                                       onsubmit="return confirm('¿Eliminar este producto del carrito?')">
                                                     @csrf
@@ -118,21 +116,19 @@
                 </div>
             </div>
 
-            {{-- Resumen del pedido --}}
+            {{-- Resumen --}}
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 sticky-top" style="top: 80px;">
+                <div class="card shadow-sm border-0 sticky-top" style="top:80px;">
                     <div class="card-header bg-dark text-white fw-semibold">
                         <i class="fas fa-receipt me-2"></i>Resumen del pedido
                     </div>
                     <div class="card-body">
-                        @foreach($carrito as $item)
+                        @foreach($carrito->items as $item)
                             <div class="d-flex justify-content-between mb-2 small">
                                 <span class="text-truncate me-2" style="max-width:180px;">
-                                    {{ $item['nombre'] }} × {{ $item['cantidad'] }}
+                                    {{ $item->nombre }} × {{ $item->cantidad }}
                                 </span>
-                                <span class="fw-semibold text-nowrap">
-                                    {{ number_format($item['precio'] * $item['cantidad'], 2) }} €
-                                </span>
+                                <span class="fw-semibold text-nowrap">{{ number_format($item->subtotal(), 2) }} €</span>
                             </div>
                         @endforeach
 
@@ -143,14 +139,9 @@
                             <span>{{ number_format($total, 2) }} €</span>
                         </div>
 
-                        <div class="alert alert-info small p-2 mb-3">
-                            <i class="fas fa-info-circle me-1"></i>
-                            El proceso de pago estará disponible próximamente.
-                        </div>
-
-                        <button class="btn btn-warning w-100 fw-semibold" disabled>
+                        <a href="{{ route('checkout') }}" class="btn btn-warning w-100 fw-semibold">
                             <i class="fas fa-credit-card me-2"></i>Proceder al pago
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

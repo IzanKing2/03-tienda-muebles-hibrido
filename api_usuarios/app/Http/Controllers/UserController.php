@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Resources\UsuarioResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -15,7 +16,7 @@ class UserController extends Controller
             return response()->json(['mensaje' => 'No autorizado'], 403);
         }
 
-        return response()->json(User::with('rol')->get());
+        return UsuarioResource::collection(User::with('rol')->get());
     }
 
     public function store(Request $request)
@@ -44,7 +45,7 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json($user->load('rol'), 201);
+        return (new UsuarioResource($user->load('rol')))->response()->setStatusCode(201);
     }
 
     public function show(Request $request, $id)
@@ -56,7 +57,7 @@ class UserController extends Controller
         $user = User::with('rol')->find($id);
         if (!$user) return response()->json(['mensaje' => 'Usuario no encontrado'], 404);
 
-        return response()->json($user);
+        return new UsuarioResource($user);
     }
 
     public function update(Request $request, $id)
@@ -87,7 +88,7 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return response()->json($user->load('rol'));
+        return new UsuarioResource($user->load('rol'));
     }
 
     public function destroy(Request $request, $id)

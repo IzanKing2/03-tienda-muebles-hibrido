@@ -6,9 +6,10 @@ use App\Http\Controllers\MueblesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PedidoController;
 
-// Página de inicio / catálogo público
-Route::get('/', [MueblesController::class, 'index'])->name('home');
+// Página de inicio
+Route::get('/', [MueblesController::class, 'home'])->name('home');
 Route::get('/muebles', [MueblesController::class, 'index'])->name('muebles.index');
 Route::get('/muebles/{id}', [MueblesController::class, 'show'])->name('muebles.show');
 
@@ -28,6 +29,12 @@ Route::post('/carrito/agregar', [CarritoController::class, 'agregar'])->name('ca
 Route::patch('/carrito/{id}', [CarritoController::class, 'actualizar'])->name('carrito.actualizar');
 Route::delete('/carrito/{id}', [CarritoController::class, 'eliminar'])->name('carrito.eliminar');
 Route::delete('/carrito', [CarritoController::class, 'vaciar'])->name('carrito.vaciar');
+
+// ─── Checkout y Pedidos ───────────────────────────────────────────────────────
+Route::get('/checkout', [PedidoController::class, 'checkout'])->name('checkout');
+Route::post('/checkout', [PedidoController::class, 'store'])->name('checkout.store');
+Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
+Route::get('/pedidos/{id}', [PedidoController::class, 'show'])->name('pedidos.show');
 
 // ─── Panel de Administración ──────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->group(function () {

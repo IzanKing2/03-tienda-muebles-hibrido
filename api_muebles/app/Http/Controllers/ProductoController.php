@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
+use App\Http\Resources\ProductoResource;
+use App\Http\Resources\ProductoCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -37,6 +39,11 @@ class ProductoController extends Controller
             $query->where('materiales', 'like', '%' . $request->materiales . '%');
         }
 
+        // Filter by destacado
+        if ($request->has('destacado')) {
+            $query->where('destacado', (bool) $request->destacado);
+        }
+
         // Text Search
         if ($request->has('search')) {
             $search = $request->search;
@@ -49,7 +56,7 @@ class ProductoController extends Controller
         // Sorting
         $sortField = $request->get('sort', 'id');
         $sortOrder = $request->get('order', 'asc');
-        $allowedSorts = ['id', 'precio', 'nombre', 'created_at'];
+        $allowedSorts = ['id', 'precio', 'nombre', 'created_at', 'destacado'];
 
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortOrder === 'desc' ? 'desc' : 'asc');
@@ -57,14 +64,14 @@ class ProductoController extends Controller
 
         // Pagination
         $perPage = $request->get('per_page', 12);
-        return response()->json($query->paginate($perPage));
+        return new ProductoCollection($query->paginate($perPage));
     }
 
     public function show($id)
     {
         $producto = Producto::with('categorias', 'galeria.imagenes')->find($id);
         if (!$producto) return response()->json(['mensaje' => 'No encontrado'], 404);
-        return response()->json($producto);
+        return new ProductoResource($producto);
     }
 
     public function store(Request $request)
@@ -92,7 +99,7 @@ class ProductoController extends Controller
             $producto->categorias()->sync($request->categorias);
         }
 
-        return response()->json($producto->load('categorias'), 201);
+        return (new ProductoResource($producto->load('categorias', 'galeria.imagenes')))->response()->setStatusCode(201);
     }
 
     public function update(Request $request, $id)
@@ -110,7 +117,7 @@ class ProductoController extends Controller
             $producto->categorias()->sync($request->categorias);
         }
 
-        return response()->json($producto->load('categorias'));
+        return new ProductoResource($producto->load('categorias', 'galeria.imagenes'));
     }
 
     public function destroy(Request $request, $id)

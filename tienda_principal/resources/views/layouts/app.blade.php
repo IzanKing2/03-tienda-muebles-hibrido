@@ -68,7 +68,14 @@
             <ul class="navbar-nav ms-auto align-items-center gap-2">
                 @if(session('auth_token'))
                     {{-- Carrito --}}
-                    @php $carritoCount = count(session('carrito', [])); @endphp
+                    @php
+                        $carritoCount = 0;
+                        if (session('auth_user')) {
+                            $carritoCount = \App\Models\Carrito::where('usuario_id', session('auth_user')['id'])
+                                ->withCount('items')
+                                ->first()?->items_count ?? 0;
+                        }
+                    @endphp
                     <li class="nav-item">
                         <a class="nav-link position-relative {{ request()->is('carrito*') ? 'active' : '' }}"
                            href="{{ route('carrito.index') }}" title="Carrito">
@@ -78,6 +85,13 @@
                                     {{ $carritoCount }}
                                 </span>
                             @endif
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('pedidos*') ? 'active' : '' }}"
+                           href="{{ route('pedidos.index') }}" title="Mis pedidos">
+                            <i class="fas fa-box me-1"></i>
+                            <span class="d-none d-lg-inline">Pedidos</span>
                         </a>
                     </li>
                     <li class="nav-item">
